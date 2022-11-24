@@ -6,15 +6,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
-@Data 
-public class Pokemon implements Serializable {
+@Data
+public class Type implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
-	@JsonProperty("name")
-	private String name;
-
-	@JsonProperty("url")
-	private String url;
+	
+	@JsonProperty("slot") 
+    private int slot;
+    
+	@JsonProperty("type") 
+    private GenericNameUrl type;
 
 }
