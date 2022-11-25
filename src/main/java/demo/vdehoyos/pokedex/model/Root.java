@@ -16,7 +16,7 @@ public class Root implements Serializable {
 	private String previous;
 	
 	@JsonProperty("results")
-	private ArrayList<GenericNameUrl> pokemons;
+	private ArrayList<Pokemon> pokemons;
 	
 	@JsonProperty("count")
 	private int count;
