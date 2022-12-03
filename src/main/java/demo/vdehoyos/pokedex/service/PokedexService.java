@@ -13,6 +13,6 @@ public interface PokedexService {
 	public PokemonDetail findOne(String name);
 	public PokemonDetailResponse getPokemonDetail(String name);
 	
-	public Object getByURL(String url, Class<?> clazz);
+	//public Object getByURL(String url, Class<?> clazz);
 
 }

@@ -15,26 +15,31 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import com.github.oscar0812.pokeapi.models.evolution.ChainLink;
-import com.github.oscar0812.pokeapi.models.evolution.EvolutionChain;
-import com.github.oscar0812.pokeapi.models.pokemon.PokemonSpecies;
-import com.github.oscar0812.pokeapi.utils.Client;
-
+import demo.vdehoyos.pokedex.model.ChainLink;
+import demo.vdehoyos.pokedex.model.EvolutionChain;
 import demo.vdehoyos.pokedex.model.Pokemon;
 import demo.vdehoyos.pokedex.model.PokemonDetail;
 import demo.vdehoyos.pokedex.model.PokemonDetailResponse;
 import demo.vdehoyos.pokedex.model.PokemonResponse;
+import demo.vdehoyos.pokedex.model.PokemonSpecies;
 import demo.vdehoyos.pokedex.model.Response;
 import demo.vdehoyos.pokedex.model.Root;
+import lombok.EqualsAndHashCode;
 import reactor.core.publisher.Mono;
 
 @Service
+@EqualsAndHashCode
 public class PokedexServiceImpl implements PokedexService {
 
-	@Autowired
-	private WebClient webClient;
+	public static WebClient webClient;
+	private ArrayList<PokemonResponse> evolutions;
 
 	private static final Logger logger = LogManager.getLogger(PokedexServiceImpl.class);
+
+	@Autowired
+	public PokedexServiceImpl(WebClient webClient) {
+		PokedexServiceImpl.webClient = webClient;
+	}
 
 	@Override
 	@Cacheable("response")
@@ -115,24 +120,16 @@ public class PokedexServiceImpl implements PokedexService {
 
 				PokemonResponse response = null;
 				response = convertToResponse(pd);
-				ArrayList<PokemonResponse> evolutions = new ArrayList<PokemonResponse>();
 
-				PokemonSpecies sp = Client.getPokemonSpeciesByName(pd.getSpecies().getName());
+				PokemonSpecies sp = (PokemonSpecies) PokedexServiceImpl.getObjectByURL(pd.getSpecies().getUrl(),
+						PokemonSpecies.class);
+ 
+				EvolutionChain chain = (EvolutionChain) PokedexServiceImpl
+						.getObjectByURL(sp.getEvolutionChain().getUrl(), EvolutionChain.class);
 
-				EvolutionChain c = sp.getEvolutionChain();
+				evolutions = new ArrayList<PokemonResponse>();
 
-				if (c != null) {
-					ChainLink chain = c.getChain();
-					do {
-
-						evolutions.add(convertToResponse(findOne(chain.getSpecies().getName())));
-
-						if (chain.getEvolvesTo() != null && chain.getEvolvesTo().size() > 0)
-							chain = chain.getEvolvesTo().get(0);
-						else
-							chain = null;
-					} while (!Objects.isNull(chain));
-				}
+				getEvo(chain.getChain());
 
 				response.setEvolutions(evolutions);
 
@@ -147,8 +144,7 @@ public class PokedexServiceImpl implements PokedexService {
 			responseDetail.setCode(String.valueOf(e.getRawStatusCode()));
 			responseDetail.setMessage("No se encontró la información solicitada");
 			responseDetail.setResponse(null);
-		} 
-		catch (Exception e) {
+		} catch (Exception e) {
 			responseDetail.setCode("E001");
 			responseDetail.setMessage("Se presentó un error al realizar la consulta. Detalle: " + e.getMessage());
 			responseDetail.setResponse(null);
@@ -156,7 +152,7 @@ public class PokedexServiceImpl implements PokedexService {
 
 		return responseDetail;
 	}
-
+	
 	public PokemonDetail findOnePokemon(Object name) {
 
 		Mono<PokemonDetail> pDetail = webClient.get().uri("/pokemon/{name}", name).retrieve()
@@ -165,9 +161,15 @@ public class PokedexServiceImpl implements PokedexService {
 		return pDetail.block();
 	}
 
-	@Override
 	public Object getByURL(String url, Class<?> clazz) {
 		Mono<?> obj = webClient.get().uri(url).retrieve().bodyToMono(clazz)
+				.doOnError(throwable -> logger.error("Error al consultar", throwable));
+
+		return obj.block();
+	}
+
+	public static Object getObjectByURL(String url, Class<?> clazz) {
+		Mono<?> obj = PokedexServiceImpl.webClient.get().uri(url).retrieve().bodyToMono(clazz)
 				.doOnError(throwable -> logger.error("Error al consultar", throwable));
 
 		return obj.block();
@@ -185,4 +187,12 @@ public class PokedexServiceImpl implements PokedexService {
 		return findOnePokemon(name);
 	}
 
+	public void getEvo(ChainLink c) {
+		if (c.getEvolvesTo().size() > 0) {
+			evolutions.add(convertToResponse(findOne(c.getSpecies().getName())));
+			getEvo(c.getEvolvesTo().get(0));
+		} else {
+			evolutions.add(convertToResponse(findOne(c.getSpecies().getName())));
+		}
+	}
 }
