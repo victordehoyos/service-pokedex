@@ -44,7 +44,7 @@ public class PokedexServiceImpl implements PokedexService {
 	@Override
 	@Cacheable("response")
 	public Response getAllPokemon(Long limit, Long offset) {
-
+		logger.debug("Ejecutando método getAllPokemon(Long limit, Long offset)");
 		try {
 			Root rootClass = webClient.get()
 					.uri(uriBuilder -> uriBuilder.path("/pokemon/").queryParam("limit", limit)
@@ -72,7 +72,7 @@ public class PokedexServiceImpl implements PokedexService {
 			}
 
 		} catch (Exception e) {
-			logger.debug("Ha ocurrido un error al consultar. Detalle: " + e.getMessage());
+			logger.error("Ha ocurrido un error al consultar. Detalle: " + e.getMessage());
 			return new Response("Ocurrió un error al procesar la transacción", "E002", 0, new ArrayList<>());
 		}
 	}
@@ -107,7 +107,7 @@ public class PokedexServiceImpl implements PokedexService {
 	@Override
 	@Cacheable("pokemonDetailResponse")
 	public PokemonDetailResponse getPokemonDetail(String name) {
-
+		logger.debug("Ejecutando método getPokemonDetail(String name)");
 		PokemonDetailResponse responseDetail = new PokemonDetailResponse();
 
 		try {
@@ -141,10 +141,12 @@ public class PokedexServiceImpl implements PokedexService {
 			responseDetail.setCode("M002");
 			responseDetail.setMessage("No se encontró la información solicitada");
 		} catch (WebClientResponseException e) {
+			logger.error("Error ocurrido con el componente WebClient - Detalle: " + e.getMessage());
 			responseDetail.setCode(String.valueOf(e.getRawStatusCode()));
 			responseDetail.setMessage("No se encontró la información solicitada");
 			responseDetail.setResponse(null);
 		} catch (Exception e) {
+			logger.debug("Error al realizar la consulta - Detalle: " + e.getMessage());
 			responseDetail.setCode("E001");
 			responseDetail.setMessage("Se presentó un error al realizar la consulta. Detalle: " + e.getMessage());
 			responseDetail.setResponse(null);
