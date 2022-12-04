@@ -18,4 +18,4 @@ El API se encuentra publicado en google cloud, se puede probar directamente en l
      * <b>offset</b>: permite definir desde que registro se quiere consultar, el valor por defecto es 0
      Si no se definen parámetros, el API tomará por defecto limit=20 y offset=0, generando el siguiente endpoint: https://pokedex-api-370404.rj.r.appspot.com/pokemon/all?limit=20&offset=0
 * <a href="https://pokedex-api-370404.rj.r.appspot.com/pokemon/{name}">https://pokedex-api-370404.rj.r.appspot.com/pokemon/{name}</a>
-     , Este endpoint requiere que se defina el <b>nombre</b> del pokemon a consultar. Se puede ver un listado completo <a href="https://www.wikidex.net/wiki/Lista_de_Pok%C3%A9mon">aquí</a>
+     , Este endpoint requiere que se defina el <b>nombre</b> del pokémon a consultar. Se puede ver un listado completo <a href="https://www.wikidex.net/wiki/Lista_de_Pok%C3%A9mon">aquí</a>
